@@ -1,3 +1,7 @@
 .vscode
 .idea
 .DS_Store
+*.dSYM/
+
+botzone*
+amazons
