@@ -3,9 +3,7 @@
 #include <vector>
 #include <limits>
 #include <iostream>
-
-// AI search depth (2-ply: 1 for AI, 1 for opponent)
-const int MAX_DEPTH = 2;
+#include <cmath>
 
 // Simple evaluation function: (my moves - opponent moves)
 // Based on "mobility" or "controlled area" idea.
@@ -61,15 +59,28 @@ int minimax_search(Board& board, int depth, int alpha, int beta, int current_pla
 }
 
 // AI's top-level function to find the best move
-Move get_minimax_move(const Board& board, int player_piece) {
-    // std::cout << std::endl;
-    // std::string player_name = (player_piece == BLACK_PIECE) ? "Black (B)" : "White (W)";
-    // std::cout << player_name << " (AI) is thinking..." << std::endl;
-
+Move get_minimax_move(const Board& board, int player_piece, int turnID) {
     std::vector<Move> possible_moves = generate_valid_moves(board, player_piece);
 
     if (possible_moves.empty()) {
-        return {-1, -1, -1, -1, -1, -1}; // No moves
+        return {-1, -1, -1, -1, -1, -1};
+    }
+
+    // Adaptive Depth Logic
+    long long b = possible_moves.size();
+    if (b == 1) {
+        b = 2;
+    }
+    const double TOTAL_NODE_BUDGET = 5900000.0; 
+
+    int max_depth = 2;
+    
+    int calculated_depth = static_cast<int>(std::log(TOTAL_NODE_BUDGET) / std::log(b));
+    
+    if (calculated_depth > 5) {
+        max_depth = 5;
+    } else {
+        max_depth = calculated_depth;
     }
 
     Move best_move = possible_moves[0];
@@ -77,15 +88,14 @@ Move get_minimax_move(const Board& board, int player_piece) {
     int alpha = -std::numeric_limits<int>::max();
     int beta = std::numeric_limits<int>::max();
 
-    // Iterate through all possible first moves
     for (const auto& move : possible_moves) {
         Board next_board = board;
         apply_move(next_board, move, player_piece);
 
         int opp_piece = (player_piece == BLACK_PIECE) ? WHITE_PIECE : BLACK_PIECE;
         
-        // Call search for the opponent, negating the result
-        int score = -minimax_search(next_board, MAX_DEPTH - 1, -beta, -alpha, opp_piece);
+        // --- NEW: Use dynamic max_depth variable ---
+        int score = -minimax_search(next_board, max_depth - 1, -beta, -alpha, opp_piece);
 
         if (score > best_score) {
             best_score = score;
@@ -94,6 +104,5 @@ Move get_minimax_move(const Board& board, int player_piece) {
         alpha = std::max(alpha, best_score);
     }
     
-    // std::cout << player_name << " (AI) chose move with score: " << best_score << std::endl;
     return best_move;
 }

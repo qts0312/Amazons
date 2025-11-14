@@ -9,4 +9,4 @@
  * @param player_piece The piece ID for the AI.
  * @return The best Move found by the AI.
  */
-Move get_minimax_move(const Board& board, int player_piece);
+Move get_minimax_move(const Board& board, int player_piece, int turnID);

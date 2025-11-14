@@ -66,14 +66,20 @@ int main() {
     
     ai_my_color = (bz_my_color == BOTZONE_BLACK) ? BLACK_PIECE : WHITE_PIECE;
 
-    // Call our Minimax AI
-    Move best_move = get_minimax_move(game_board, ai_my_color);
+    // ** NEW: Opening Book for Black, Turn 1 **
+    // Check if we are Black (1) AND this is the first decision (turnID == 1)
+    if (ai_my_color == BLACK_PIECE && turnID == 1) {
+        // Hard-coded move: (x=2, y=0) -> (x=2, y=3), arrow to (x=4, y=3)
+        std::cout << "2 0 2 3 4 3" << std::endl;
+    } else {
+        // For all other turns (or if playing as White), call the AI
+        Move best_move = get_minimax_move(game_board, ai_my_color, turnID);
 
-    // --- Output Decision ---
-    // Convert our (r, c) back to Botzone's (x, y)
-    std::cout << best_move.from_c << " " << best_move.from_r << " "
-              << best_move.to_c   << " " << best_move.to_r   << " "
-              << best_move.arrow_c << " " << best_move.arrow_r << std::endl;
+        // Convert our (r, c) back to Botzone's (x, y)
+        std::cout << best_move.from_c << " " << best_move.from_r << " "
+                  << best_move.to_c   << " " << best_move.to_r   << " "
+                  << best_move.arrow_c << " " << best_move.arrow_r << std::endl;
+    }
 
     return 0;
 }
