@@ -1,195 +1,79 @@
-#include "game.h"
-#include "ai.h" // Include the new AI header
 #include <iostream>
-#include <limits>
-#include <cstdlib> // for srand
-#include <ctime>   // for time
+#include <string>
+#include <vector>
+#include <cstdlib>
+#include <ctime>
+#include "types.h" // Our game types (Board, Move, enums)
+#include "game.h"  // Our game logic (apply_move, init_board)
+#include "ai.h"    // Our AI (get_minimax_move)
 
-// --- Human Player Input ---
+// --- Coordinate System ---
+// Botzone (x, y) = (column, row)
+// Our AI (r, c) = (row, column)
 
-// Gets move coordinates from the human player
-bool get_human_move(Move& move) {
-    using namespace std;
-    cout << endl;
-    cout << "Your turn (Black 'B')." << endl;
-    cout << "Enter move (FromRow FromCol ToRow ToCol ArrowRow ArrowCol)" << endl;
-    cout << "Or enter -1 to access in-game menu (Save/Exit): ";
-
-    int fr;
-    cin >> fr;
-
-    if (cin.fail()) {
-        cin.clear();
-        cin.ignore(numeric_limits<streamsize>::max(), '\n');
-        cout << "Invalid input. Please enter numbers." << endl;
-        return false;
-    }
-
-    if (fr == -1) {
-        cin.ignore(numeric_limits<streamsize>::max(), '\n');
-        return false; // Signal for menu
-    }
-
-    int fc, tr, tc, ar, ac;
-    cin >> fc >> tr >> tc >> ar >> ac;
-
-    if (cin.fail()) {
-        cin.clear();
-        cin.ignore(numeric_limits<streamsize>::max(), '\n');
-        cout << "Invalid input. Please enter 6 numbers." << endl;
-        return false;
-    }
-
-    move = {fr, fc, tr, tc, ar, ac};
-    return true; // Move is ready
-}
-
-// --- Game Flow ---
-
-// Shows the in-game menu
-// Returns true if the user wants to exit to the main menu
-bool show_ingame_menu(Board& board, int current_player) {
-    using namespace std;
-    cout << "--- In-Game Menu ---" << endl;
-    cout << "1. Save Game" << endl;
-    cout << "2. Exit to Main Menu (Game not saved)" << endl;
-    cout << "3. Continue Playing" << endl;
-    cout << "Enter choice: ";
-    int choice;
-    cin >> choice;
-
-    if (cin.fail()) {
-        cin.clear();
-        cin.ignore(numeric_limits<streamsize>::max(), '\n');
-        choice = -1;
-    }
-
-    switch (choice) {
-        case 1: 
-            if (save_game(board, current_player)) {
-                cout << "Game saved." << endl;
-            } else {
-                cout << "Error: Could not save game." << endl;
-            }
-            cout << "Press Enter to continue.";
-            cin.ignore(numeric_limits<streamsize>::max(), '\n');
-            cin.get();
-            return false;
-        case 2: 
-            return true; // Exit to main menu
-        default:
-            return false;
-    }
-}
-
-// The primary game loop for a single match
-void run_game_loop(Board& board, int current_player) {
-    using namespace std;
-    bool game_over = false;
-
-    while (!game_over) {
-        clear_screen();
-        print_board(board);
-
-        // Check for win condition
-        if (!has_valid_moves(board, current_player)) {
-            game_over = true;
-            string winner = (current_player == BLACK_PIECE) ? "White (AI)" : "Black (Human)";
-            cout << endl << "GAME OVER: " << winner << " wins!" << endl;
-            break;
-        }
-
-        Move move;
-        if (current_player == BLACK_PIECE) { // Human's turn
-            bool move_entered = false;
-            while (!move_entered) {
-                if (!get_human_move(move)) {
-                    if (show_ingame_menu(board, current_player)) {
-                        return; // Exit to main menu
-                    }
-                    clear_screen();
-                    print_board(board);
-                    continue;
-                }
-
-                if (is_move_valid(board, move, current_player)) {
-                    move_entered = true;
-                } else {
-                    cout << "That is not a valid move. Please try again." << endl;
-                }
-            }
-        } else { // AI's turn
-            move = get_minimax_move(board, current_player); // Use new AI function
-        }
-
-        apply_move(board, move, current_player);
-        current_player = (current_player == BLACK_PIECE) ? WHITE_PIECE : BLACK_PIECE;
-    }
-
-    cout << "Press Enter to return to the main menu...";
-    cin.ignore(numeric_limits<streamsize>::max(), '\n');
-    cin.get();
-}
-
-// --- Main Function ---
+// --- Color System ---
+// Botzone (sample): 1 = Black, -1 = White
+// Our AI: 1 (BLACK_PIECE) = Black, 2 (WHITE_PIECE) = White
 
 int main() {
-    using namespace std;
-    
-    // Seed the random number generator (used by AI if multiple moves have same score)
     srand(static_cast<unsigned int>(time(nullptr)));
 
-    bool running = true;
-    while (running) {
-        clear_screen();
-        cout << "===== Amazon Chess (亚马逊棋) =====" << endl;
-        cout << "1. New Game (Human vs AI)" << endl;
-        cout << "2. Load Game" << endl;
-        cout << "3. Exit" << endl;
-        cout << "==================================" << endl;
-        cout << "Enter choice: ";
+    Board game_board;
+    init_board(game_board); // Use our 8x8 init
 
-        int choice;
-        cin >> choice;
+    int turnID;
+    std::cin >> turnID;
 
-        if (cin.fail()) {
-            cin.clear();
-            cin.ignore(numeric_limits<streamsize>::max(), '\n');
-            choice = -1;
+    // --- History Playback Loop ---
+
+    const int BOTZONE_BLACK = 1;
+    const int BOTZONE_WHITE = -1;
+    int bz_my_color = BOTZONE_WHITE; // Assume White
+    int bz_opp_color;
+    int ai_my_color;
+    int ai_opp_color;
+
+    int x0, y0, x1, y1, x2, y2; // Botzone (x, y) coords
+
+    for (int i = 0; i < turnID; i++) {
+        // 1. Read and apply opponent's move
+        std::cin >> x0 >> y0 >> x1 >> y1 >> x2 >> y2;
+        
+        if (x0 == -1) {
+            bz_my_color = BOTZONE_BLACK; // We are Black
+        } else {
+            bz_opp_color = -bz_my_color;
+            ai_opp_color = (bz_opp_color == BOTZONE_BLACK) ? BLACK_PIECE : WHITE_PIECE;
+            
+            // Convert Botzone (x,y) to our (r,c)
+            Move opp_move = { y0, x0, y1, x1, y2, x2 };
+            apply_move(game_board, opp_move, ai_opp_color);
         }
 
-        Board game_board;
-        int player;
-
-        switch (choice) {
-            case 1:
-                init_board(game_board);
-                player = BLACK_PIECE;
-                run_game_loop(game_board, player);
-                break;
-            case 2:
-                if (load_game(game_board, player)) {
-                    cout << "Game loaded." << endl;
-                    cout << "Press Enter to start...";
-                    cin.ignore(numeric_limits<streamsize>::max(), '\n');
-                    cin.get();
-                    run_game_loop(game_board, player);
-                } else {
-                    cout << "Error loading game (file 'amazons.sav' not found or corrupted)." << endl;
-                    cout << "Press Enter to continue...";
-                    cin.ignore(numeric_limits<streamsize>::max(), '\n');
-                    cin.get();
-                }
-                break;
-            case 3:
-                running = false;
-                break;
-            default:
-                cout << "Invalid choice. Press Enter to try again...";
-                cin.ignore(numeric_limits<streamsize>::max(), '\n');
-                cin.get();
-                break;
+        // 2. Read and apply my own (past) move
+        if (i < turnID - 1) {
+            std::cin >> x0 >> y0 >> x1 >> y1 >> x2 >> y2;
+            if (x0 >= 0) {
+                ai_my_color = (bz_my_color == BOTZONE_BLACK) ? BLACK_PIECE : WHITE_PIECE;
+                
+                Move my_past_move = { y0, x0, y1, x1, y2, x2 };
+                apply_move(game_board, my_past_move, ai_my_color);
+            }
         }
     }
+
+    // --- End of History Playback ---
+    
+    ai_my_color = (bz_my_color == BOTZONE_BLACK) ? BLACK_PIECE : WHITE_PIECE;
+
+    // Call our Minimax AI
+    Move best_move = get_minimax_move(game_board, ai_my_color);
+
+    // --- Output Decision ---
+    // Convert our (r, c) back to Botzone's (x, y)
+    std::cout << best_move.from_c << " " << best_move.from_r << " "
+              << best_move.to_c   << " " << best_move.to_r   << " "
+              << best_move.arrow_c << " " << best_move.arrow_r << std::endl;
+
     return 0;
 }

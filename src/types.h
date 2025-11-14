@@ -4,7 +4,7 @@
 #include <string>
 #include <vector>
 
-const int BOARD_SIZE = 10;
+const int BOARD_SIZE = 8;
 
 // Represents the state of a single tile
 enum TileState {

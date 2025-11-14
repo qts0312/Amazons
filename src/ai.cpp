@@ -62,9 +62,9 @@ int minimax_search(Board& board, int depth, int alpha, int beta, int current_pla
 
 // AI's top-level function to find the best move
 Move get_minimax_move(const Board& board, int player_piece) {
-    std::cout << std::endl;
-    std::string player_name = (player_piece == BLACK_PIECE) ? "Black (B)" : "White (W)";
-    std::cout << player_name << " (AI) is thinking..." << std::endl;
+    // std::cout << std::endl;
+    // std::string player_name = (player_piece == BLACK_PIECE) ? "Black (B)" : "White (W)";
+    // std::cout << player_name << " (AI) is thinking..." << std::endl;
 
     std::vector<Move> possible_moves = generate_valid_moves(board, player_piece);
 
@@ -94,6 +94,6 @@ Move get_minimax_move(const Board& board, int player_piece) {
         alpha = std::max(alpha, best_score);
     }
     
-    std::cout << player_name << " (AI) chose move with score: " << best_score << std::endl;
+    // std::cout << player_name << " (AI) chose move with score: " << best_score << std::endl;
     return best_move;
 }

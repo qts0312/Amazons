@@ -14,15 +14,15 @@ void init_board(Board& board) {
         }
     }
     // Black pieces
-    board[0][3] = BLACK_PIECE;
-    board[0][6] = BLACK_PIECE;
-    board[3][0] = BLACK_PIECE;
-    board[3][9] = BLACK_PIECE;
+    board[2][0] = BLACK_PIECE;
+    board[0][2] = BLACK_PIECE;
+    board[0][5] = BLACK_PIECE;
+    board[2][7] = BLACK_PIECE;
     // White pieces
-    board[6][0] = WHITE_PIECE;
-    board[6][9] = WHITE_PIECE;
-    board[9][3] = WHITE_PIECE;
-    board[9][6] = WHITE_PIECE;
+    board[5][0] = WHITE_PIECE;
+    board[7][2] = WHITE_PIECE;
+    board[7][5] = WHITE_PIECE;
+    board[5][7] = WHITE_PIECE;
 }
 
 void print_board(const Board& board) {
