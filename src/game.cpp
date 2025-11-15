@@ -1,4 +1,5 @@
 #include "game.h"
+#include "colors.h"
 #include <iostream>
 #include <fstream>
 #include <stdexcept>
@@ -14,42 +15,75 @@ void init_board(Board& board) {
         }
     }
     // Black pieces
-    board[0][3] = BLACK_PIECE;
-    board[0][6] = BLACK_PIECE;
-    board[3][0] = BLACK_PIECE;
-    board[3][9] = BLACK_PIECE;
+    board[0][2] = BLACK_PIECE;
+    board[0][5] = BLACK_PIECE;
+    board[2][0] = BLACK_PIECE;
+    board[2][7] = BLACK_PIECE;
     // White pieces
-    board[6][0] = WHITE_PIECE;
-    board[6][9] = WHITE_PIECE;
-    board[9][3] = WHITE_PIECE;
-    board[9][6] = WHITE_PIECE;
+    board[5][0] = WHITE_PIECE;
+    board[5][7] = WHITE_PIECE;
+    board[7][2] = WHITE_PIECE;
+    board[7][5] = WHITE_PIECE;
 }
 
 void print_board(const Board& board) {
     using namespace std;
-    cout << endl;
-    cout << "   ";
+    
+    cout << C_GRAY;
+
+    cout << endl << "     ";
     for (int c = 0; c < BOARD_SIZE; ++c) {
-        cout << " " << c << " ";
+        cout << " " << c << "  ";
     }
     cout << endl;
-    cout << "  +" << string(BOARD_SIZE * 3, '-') << "+" << endl;
+
+    cout << "   +";
+    for (int c = 0; c < BOARD_SIZE; ++c) {
+        cout << "---+";
+    }
+    cout << endl;
 
     for (int r = 0; r < BOARD_SIZE; ++r) {
-        cout << " " << r << "|";
+        cout << " " << r << " |";
         for (int c = 0; c < BOARD_SIZE; ++c) {
-            char piece_char = ' ';
+            
+            string piece_str = " ";
+            string piece_color = "";
+
             switch (board[r][c]) {
-                case EMPTY:       piece_char = '.'; break;
-                case BLACK_PIECE: piece_char = 'B'; break;
-                case WHITE_PIECE: piece_char = 'W'; break;
-                case BARRIER:     piece_char = 'X'; break;
+                case EMPTY:
+                    piece_str = " ";
+                    break;
+                case BLACK_PIECE:
+                    piece_str = u8"●";
+                    piece_color = C_BLUE;
+                    break;
+                case WHITE_PIECE:
+                    piece_str = u8"●";
+                    piece_color = C_YELLOW;
+                    break;
+                case BARRIER:
+                    piece_str = u8"■";
+                    piece_color = C_RED;
+                    break;
             }
-            cout << " " << piece_char << " ";
+            
+            if (piece_color.empty()) {
+                cout << " " << piece_str << " |";
+            } else {
+                cout << " " << piece_color << piece_str << C_GRAY << " |";
+            }
         }
-        cout << "|" << endl;
+        cout << endl;
+
+        cout << "   +";
+        for (int c = 0; c < BOARD_SIZE; ++c) {
+            cout << "---+";
+        }
+        cout << endl;
     }
-    cout << "  +" << string(BOARD_SIZE * 3, '-') << "+" << endl;
+    
+    cout << C_RESET;
 }
 
 bool is_position_valid(int r, int c) {

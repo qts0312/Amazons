@@ -82,6 +82,19 @@ bool show_ingame_menu(Board& board, int current_player) {
     }
 }
 
+int get_current_turn_id(const Board& board) {
+    int barrier_count = 0;
+    for (int r = 0; r < BOARD_SIZE; ++r) {
+        for (int c = 0; c < BOARD_SIZE; ++c) {
+            if (board[r][c] == BARRIER) {
+                barrier_count++;
+            }
+        }
+    }
+    
+    return (barrier_count / 2) + 1;
+}
+
 // The primary game loop for a single match
 void run_game_loop(Board& board, int current_player) {
     using namespace std;
@@ -119,7 +132,9 @@ void run_game_loop(Board& board, int current_player) {
                 }
             }
         } else { // AI's turn
-            move = get_minimax_move(board, current_player); // Use new AI function
+            int turnID = get_current_turn_id(board);
+
+            move = get_minimax_move(board, current_player, turnID); // Use new AI function
         }
 
         apply_move(board, move, current_player);
